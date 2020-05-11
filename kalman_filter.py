@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 
 
 class KalmanFilter(object):
@@ -22,6 +23,27 @@ class KalmanFilter(object):
 
         self.k_t = None
 
+        self.history = []
+        self.t = 0
+
+    @staticmethod
+    def expand_cols(name, vec):
+        vec = vec.ravel()
+        n = int(vec.shape[0])
+        names = [f"{name}.{i+1}" for i in range(n)]
+        d = dict(zip(names, vec))
+        return d
+
+    def update_history(self):
+        self.t += 1
+        state = {'t': self.t}
+        state.update(self.expand_cols('x_t_t1', self.x_t_t1))
+        state.update(self.expand_cols('p_t_t1', self.p_t_t1))
+        state.update(self.expand_cols('x_t_t', self.x_t_t))
+        state.update(self.expand_cols('p_t_t', self.p_t_t))
+        state.update(self.expand_cols('k_t', self.k_t))
+        self.history.append(state)
+
     @staticmethod
     def _dot_3(x1, x2, x3):
         return np.dot(np.dot(x1, x2), x3)
@@ -32,7 +54,7 @@ class KalmanFilter(object):
 
     def _innovation(self, y_t):
         self.e_t = y_t - np.dot(self.c, self.x_t_t1)
-        self.r_ee = self._dot_3(self.c, self.p_t_t1, self.c.T)
+        self.r_ee = self._dot_3(self.c, self.p_t_t1, self.c.T) + self.r_vv
         self.inv_r_ee = np.linalg.inv(self.r_ee)
 
     def _gain(self):
@@ -47,7 +69,11 @@ class KalmanFilter(object):
         self._innovation(y_t)
         self._gain()
         self._update()
+        self.update_history()
         return self.x_t_t
+
+    def get_history(self):
+        return pd.DataFrame(self.history)
 
 
 if __name__ == '__main__':

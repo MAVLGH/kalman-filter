@@ -18,15 +18,22 @@ class DynamicalSystem(object):
         self.y_t = None
         self.history = []
 
+    @staticmethod
+    def expand_cols(name, vec):
+        vec = vec.ravel()
+        n = int(vec.shape[0])
+        names = [f"{name}.{i+1}" for i in range(n)]
+        d = dict(zip(names, vec))
+        return d
+
     def update_history(self):
-        state = {
-            't': self.t,
-            'x_t': self.x_t,
-            'u_t': self.u_t,
-            'w_t': self.w,
-            'y_t': self.y_t,
-            'v_t': self.v
-        }
+        self.t += 1
+        state = {'t': self.t}
+        state.update(self.expand_cols('x_t', self.x_t))
+        state.update(self.expand_cols('u_t', self.u_t))
+        state.update(self.expand_cols('w_t', self.w))
+        state.update(self.expand_cols('y_t', self.y_t))
+        state.update(self.expand_cols('v_t', self.v))
         self.history.append(state)
 
     @staticmethod
@@ -41,7 +48,6 @@ class DynamicalSystem(object):
         self.u_t = u if u is not None else self.u_t
         self.w = self._sample_noise(self.r_ww, 1)
         self.x_t1 = self.x_t
-        self.t = self.t+1
         self.x_t = self._x_step(self.a, self.b, self.w, self.x_t1, self.u_t)
         return self.x_t
 
