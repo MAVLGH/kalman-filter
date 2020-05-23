@@ -1,3 +1,10 @@
+"""
+
+James V. Candy - Bayesian Signal Processing, Classical, Modern, and Particle Filtering Methods.
+Example 5.1 - RC circuit
+
+"""
+
 from kalman_filter import KalmanFilter
 from model import DynamicalSystem
 

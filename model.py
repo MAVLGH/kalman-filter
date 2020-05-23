@@ -4,6 +4,15 @@ import pandas as pd
 
 class DynamicalSystem(object):
     def __init__(self, a, b, c, r_ww, r_vv, x_ini=None):
+        """
+
+        :param a:
+        :param b:
+        :param c:
+        :param r_ww:
+        :param r_vv:
+        :param x_ini:
+        """
         self.a = a
         self.b = b
         self.c = c
@@ -20,6 +29,12 @@ class DynamicalSystem(object):
 
     @staticmethod
     def expand_cols(name, vec):
+        """
+
+        :param name:
+        :param vec:
+        :return:
+        """
         vec = vec.ravel()
         n = int(vec.shape[0])
         names = [f"{name}.{i+1}" for i in range(n)]
@@ -27,6 +42,10 @@ class DynamicalSystem(object):
         return d
 
     def update_history(self):
+        """
+
+        :return:
+        """
         self.t += 1
         state = {'t': self.t}
         state.update(self.expand_cols('x_t', self.x_t))
@@ -38,13 +57,33 @@ class DynamicalSystem(object):
 
     @staticmethod
     def _sample_noise(cov, n):
+        """
+
+        :param cov:
+        :param n:
+        :return:
+        """
         return np.random.multivariate_normal(np.zeros(cov.shape[0]), cov, n).T
 
     @staticmethod
     def _x_step(a, b, w, x_t1, u):
+        """
+
+        :param a:
+        :param b:
+        :param w:
+        :param x_t1:
+        :param u:
+        :return:
+        """
         return np.dot(a, x_t1) + np.dot(b, u) + w
 
     def x_step(self, u=None):
+        """
+
+        :param u:
+        :return:
+        """
         self.u_t = u if u is not None else self.u_t
         self.w = self._sample_noise(self.r_ww, 1)
         self.x_t1 = self.x_t
@@ -53,9 +92,21 @@ class DynamicalSystem(object):
 
     @staticmethod
     def _y_step(x_t, c, v):
+        """
+
+        :param x_t:
+        :param c:
+        :param v:
+        :return:
+        """
         return np.dot(c, x_t) + v
 
     def y_step(self, u=None):
+        """
+
+        :param u:
+        :return:
+        """
         x_t = self.x_step(u=u)
         self.v = self._sample_noise(self.r_vv, 1)
         self.y_t = self._y_step(x_t, self.c, self.v)
@@ -63,9 +114,19 @@ class DynamicalSystem(object):
         return self.y_t
 
     def y_steps(self, n_steps, u=None):
+        """
+
+        :param n_steps:
+        :param u:
+        :return:
+        """
         _ = [self.y_step(u=u) for _ in range(n_steps)]
 
     def get_history(self):
+        """
+
+        :return:
+        """
         return pd.DataFrame(self.history)
 
 
